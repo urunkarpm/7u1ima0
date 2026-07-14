@@ -10,7 +10,8 @@
     "windows"
   ],
   "action": {
-    "default_title": "Show Heading & Capture Screenshot"
+    "default_title": "Show Heading & Capture Screenshot",
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
