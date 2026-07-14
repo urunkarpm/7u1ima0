@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "downloads"
+    "downloads",
+    "windows"
   ],
   "action": {
     "default_title": "Show Heading & Capture Screenshot"
