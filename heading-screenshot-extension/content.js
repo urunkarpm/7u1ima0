@@ -59,11 +59,10 @@ async function showHeadingAndCaptureScreenshot() {
     indicators.forEach(indicator => indicator.remove());
     
     if (response && response.dataUrl) {
-      // Convert data URL to blob and download
-      const blob = await fetch(response.dataUrl).then(r => r.blob());
+      // Send the dataUrl to background script for download
       const downloadResponse = await chrome.runtime.sendMessage({ 
         action: 'downloadScreenshot', 
-        blob: blob 
+        dataUrl: response.dataUrl
       });
       
       if (downloadResponse && downloadResponse.success) {

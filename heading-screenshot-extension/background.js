@@ -44,13 +44,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep the message channel open for async response
   } else if (message.action === 'downloadScreenshot') {
     // Download the screenshot using chrome.downloads API
-    const url = URL.createObjectURL(message.blob);
+    // Use the dataUrl directly instead of creating a blob URL
     chrome.downloads.download({
-      url: url,
+      url: message.dataUrl,
       filename: `screenshot-${new Date().getTime()}.png`,
       saveAs: false
     }, () => {
-      URL.revokeObjectURL(url);
       sendResponse({ success: true });
     });
     return true; // Keep the message channel open for async response
