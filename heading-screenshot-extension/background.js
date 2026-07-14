@@ -14,138 +14,27 @@ chrome.action.onClicked.addListener(async (tab) => {
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'captureScreenshot') {
-    captureFullPageScreenshot(sender.tab.id)
-      .then(blob => {
-        // Download the screenshot using chrome.downloads API
-        const url = URL.createObjectURL(blob);
-        chrome.downloads.download({
-          url: url,
-          filename: `screenshot-${new Date().getTime()}.png`,
-          saveAs: false
-        }, () => {
-          URL.revokeObjectURL(url);
-          sendResponse({ success: true });
-        });
+    // Forward to captureVisibleTab which must be called from extension context
+    chrome.tabs.captureVisibleTab(sender.tab.id, { format: 'png' })
+      .then(dataUrl => {
+        sendResponse({ dataUrl: dataUrl });
       })
       .catch(error => {
         console.error('Error capturing screenshot:', error);
         sendResponse({ error: error.message });
       });
     return true; // Keep the message channel open for async response
+  } else if (message.action === 'downloadScreenshot') {
+    // Download the screenshot using chrome.downloads API
+    const url = URL.createObjectURL(message.blob);
+    chrome.downloads.download({
+      url: url,
+      filename: `screenshot-${new Date().getTime()}.png`,
+      saveAs: false
+    }, () => {
+      URL.revokeObjectURL(url);
+      sendResponse({ success: true });
+    });
+    return true; // Keep the message channel open for async response
   }
 });
-
-function getPageDimensions() {
-  return {
-    width: Math.max(
-      document.body.scrollWidth, document.documentElement.scrollWidth,
-      document.body.offsetWidth, document.documentElement.offsetWidth,
-      document.body.clientWidth, document.documentElement.clientWidth
-    ),
-    height: Math.max(
-      document.body.scrollHeight, document.documentElement.scrollHeight,
-      document.body.offsetHeight, document.documentElement.offsetHeight,
-      document.body.clientHeight, document.documentElement.clientHeight
-    ),
-    windowHeight: window.innerHeight,
-    windowWidth: window.innerWidth
-  };
-}
-
-async function drawImageToCanvas(ctx, dataUrl, x, y, width, height) {
-  return new Promise((resolve, reject) => {
-    // Convert data URL to blob
-    fetch(dataUrl)
-      .then(response => response.blob())
-      .then(blob => createImageBitmap(blob))
-      .then(img => {
-        ctx.drawImage(img, x, y, width, height);
-        resolve();
-      })
-      .catch(error => {
-        console.error('Error loading image:', error);
-        reject(new Error('Failed to load image: ' + error.message));
-      });
-  });
-}
-
-async function captureFullPageScreenshot(tabId) {
-  // 1. Get dimensions by injecting content script
-  const [{ result: dims }] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: getPageDimensions
-  });
-
-  // Check canvas size limits (most browsers limit to 16384x16384)
-  const MAX_CANVAS_SIZE = 16384;
-  if (dims.width > MAX_CANVAS_SIZE || dims.height > MAX_CANVAS_SIZE) {
-    throw new Error(`Page dimensions (${dims.width}x${dims.height}) exceed maximum canvas size (${MAX_CANVAS_SIZE}x${MAX_CANVAS_SIZE})`);
-  }
-
-  // 2. Prepare canvas to stitch images together
-  const canvas = new OffscreenCanvas(dims.width, dims.height);
-  const ctx = canvas.getContext('2d');
-
-  // Hide sticky/fixed elements before capturing
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      const fixedElements = document.querySelectorAll('*');
-      const originalStyles = [];
-      fixedElements.forEach(el => {
-        const style = window.getComputedStyle(el);
-        if (style.position === 'fixed' || style.position === 'sticky') {
-          originalStyles.push({ element: el, position: el.style.position });
-          el.style.position = 'absolute';
-        }
-      });
-      window._originalFixedStyles = originalStyles;
-    }
-  });
-
-  let scrollY = 0;
-  
-  // 3. Loop and capture
-  while (scrollY < dims.height) {
-    // Scroll to position
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      func: (y) => window.scrollTo(0, y),
-      args: [scrollY]
-    });
-
-    // Wait for scroll events to fire and page to settle
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Capture visible viewport
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-
-    // Draw the dataUrl to canvas at correct coordinates
-    await drawImageToCanvas(ctx, dataUrl, 0, scrollY, dims.windowWidth, dims.windowHeight);
-
-    scrollY += dims.windowHeight;
-  }
-
-  // Restore sticky/fixed elements
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      if (window._originalFixedStyles) {
-        window._originalFixedStyles.forEach(item => {
-          item.element.style.position = item.position;
-        });
-        delete window._originalFixedStyles;
-      }
-    }
-  });
-
-  // Reset scroll position
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => window.scrollTo(0, 0)
-  });
-
-  // 4. Export the stitched image as blob
-  const blob = await canvas.convertToBlob({ type: 'image/png' });
-  return blob;
-}
