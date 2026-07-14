@@ -6,15 +6,29 @@
     <title>Weather Web App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="light-mode">
     <!-- Weather Background -->
     <div id="weatherBackground" class="weather-background clear-sky"></div>
     
     <div class="container">
         <header>
-            <h1>🌤️ Weather Dashboard</h1>
+            <div class="header-top">
+                <h1>🌤️ Weather Dashboard</h1>
+                <div class="header-actions">
+                    <button id="themeToggle" title="Toggle dark/light mode">🌙</button>
+                    <button id="customizeBtn" title="Customize dashboard">⚙️</button>
+                </div>
+            </div>
             <p class="subtitle">Real-time weather information for any location</p>
         </header>
+
+        <!-- Multi-city Navigation -->
+        <section class="cities-section">
+            <div class="cities-container" id="citiesContainer">
+                <!-- Saved cities will be inserted here -->
+            </div>
+            <button id="addCityBtn" class="add-city-btn" title="Add new city">➕ Add City</button>
+        </section>
 
         <div class="search-section">
             <div class="search-box">
@@ -24,6 +38,74 @@
             </div>
         </div>
 
+        <!-- Customization Panel -->
+        <div id="customizePanel" class="customize-panel hidden">
+            <h3>🎨 Customize Your Dashboard</h3>
+            <p class="customize-hint">Drag and drop cards to reorder, toggle visibility</p>
+            <div class="cards-grid" id="cardsGrid">
+                <!-- Cards for customization will be inserted here -->
+            </div>
+            <div class="customize-actions">
+                <button id="saveCustomizeBtn" class="primary-btn">Save Layout</button>
+                <button id="resetLayoutBtn" class="secondary-btn">Reset to Default</button>
+                <button id="closeCustomizeBtn" class="secondary-btn">Close</button>
+            </div>
+        </div>
+
+        <!-- Widget Preview Section -->
+        <section class="widgets-section" id="widgetsSection">
+            <h2>📱 Widgets</h2>
+            <div class="widgets-container">
+                <div class="widget-card widget-small" data-widget="small">
+                    <div class="widget-header">
+                        <span class="widget-title">Small Widget</span>
+                        <button class="widget-add-btn" data-size="small">+ Add</button>
+                    </div>
+                    <div class="widget-content">
+                        <span class="widget-temp" id="widgetTempSmall">--°</span>
+                        <img class="widget-icon" id="widgetIconSmall" src="" alt="" />
+                        <span class="widget-city" id="widgetCitySmall">--</span>
+                    </div>
+                </div>
+                <div class="widget-card widget-medium" data-widget="medium">
+                    <div class="widget-header">
+                        <span class="widget-title">Medium Widget</span>
+                        <button class="widget-add-btn" data-size="medium">+ Add</button>
+                    </div>
+                    <div class="widget-content">
+                        <div class="widget-main">
+                            <span class="widget-temp" id="widgetTempMedium">--°</span>
+                            <img class="widget-icon" id="widgetIconMedium" src="" alt="" />
+                        </div>
+                        <div class="widget-details">
+                            <span class="widget-city" id="widgetCityMedium">--</span>
+                            <span class="widget-desc" id="widgetDescMedium">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget-card widget-large" data-widget="large">
+                    <div class="widget-header">
+                        <span class="widget-title">Large Widget</span>
+                        <button class="widget-add-btn" data-size="large">+ Add</button>
+                    </div>
+                    <div class="widget-content">
+                        <div class="widget-main">
+                            <span class="widget-temp" id="widgetTempLarge">--°</span>
+                            <img class="widget-icon" id="widgetIconLarge" src="" alt="" />
+                            <span class="widget-city" id="widgetCityLarge">--</span>
+                        </div>
+                        <div class="widget-details-full">
+                            <span class="widget-desc" id="widgetDescLarge">--</span>
+                            <div class="widget-stats">
+                                <span>💧 <span id="widgetHumidityLarge">--%</span></span>
+                                <span>💨 <span id="widgetWindLarge">-- km/h</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <div id="loading" class="loading hidden">
             <div class="spinner"></div>
             <p>Loading weather data...</p>
@@ -31,9 +113,17 @@
 
         <div id="error" class="error-message hidden"></div>
 
+        <!-- Achievements/Badges Section -->
+        <section class="achievements-section" id="achievementsSection">
+            <h2>🏆 Achievements</h2>
+            <div class="badges-container" id="badgesContainer">
+                <!-- Badges will be inserted here -->
+            </div>
+        </section>
+
         <div id="weatherData" class="weather-data hidden">
             <!-- Current Weather -->
-            <section class="current-weather">
+            <section class="current-weather card-section" data-card="current">
                 <h2>Current Weather</h2>
                 <div class="weather-card main">
                     <div class="location-info">
@@ -48,6 +138,7 @@
                             <span class="unit">°C</span>
                         </div>
                         <p id="weatherDesc">--</p>
+                        <p class="funny-desc" id="funnyDesc"></p>
                     </div>
                     <div class="weather-details">
                         <div class="detail-item">
@@ -118,7 +209,7 @@
             </section>
 
             <!-- Hourly Forecast -->
-            <section class="forecast-section">
+            <section class="forecast-section card-section" data-card="hourly">
                 <h2>Hourly Forecast (Next 24 Hours)</h2>
                 <div class="forecast-container" id="hourlyForecast">
                     <!-- Hourly forecast cards will be inserted here -->
@@ -126,7 +217,7 @@
             </section>
 
             <!-- Daily Forecast -->
-            <section class="forecast-section">
+            <section class="forecast-section card-section" data-card="daily">
                 <h2>7-Day Forecast</h2>
                 <div class="daily-forecast" id="dailyForecast">
                     <!-- Daily forecast cards will be inserted here -->
@@ -134,7 +225,7 @@
             </section>
 
             <!-- Air Quality -->
-            <section class="air-quality-section">
+            <section class="air-quality-section card-section" data-card="aqi">
                 <h2>Air Quality</h2>
                 <div class="weather-card">
                     <div class="aqi-display">
@@ -172,6 +263,18 @@
                     </div>
                 </div>
             </section>
+        </div>
+    </div>
+
+    <!-- Add City Modal -->
+    <div id="addCityModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🌍 Add New City</h3>
+            <input type="text" id="newCityInput" placeholder="Enter city name..." />
+            <div class="modal-actions">
+                <button id="confirmAddCityBtn" class="primary-btn">Add City</button>
+                <button id="cancelAddCityBtn" class="secondary-btn">Cancel</button>
+            </div>
         </div>
     </div>
 
