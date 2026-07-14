@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Web App</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet CSS for interactive maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Chart.js for trend charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="light-mode">
     <!-- Weather Background -->
@@ -263,6 +267,38 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Interactive Radar Map -->
+            <section class="radar-map-section card-section" data-card="radar">
+                <h2>🗺️ Interactive Weather Map</h2>
+                <div class="map-controls">
+                    <button class="map-layer-btn active" data-layer="precipitation">🌧️ Precipitation</button>
+                    <button class="map-layer-btn" data-layer="temperature">🌡️ Temperature</button>
+                    <button class="map-layer-btn" data-layer="wind">💨 Wind</button>
+                    <button class="map-layer-btn" data-layer="clouds">☁️ Cloud Cover</button>
+                    <button class="map-layer-btn" data-layer="lightning">⚡ Lightning</button>
+                    <button class="map-layer-btn" data-layer="snowfall">❄️ Snowfall</button>
+                </div>
+                <div id="weatherMap" class="weather-map"></div>
+                <p class="map-hint">Pinch to zoom, drag to pan. Click markers for details.</p>
+            </section>
+
+            <!-- Trend Charts -->
+            <section class="trend-charts-section card-section" data-card="charts">
+                <h2>📈 Weather Trends</h2>
+                <div class="chart-tabs">
+                    <button class="chart-tab-btn active" data-chart="temperature">Temperature</button>
+                    <button class="chart-tab-btn" data-chart="precipitation">Precipitation</button>
+                    <button class="chart-tab-btn" data-chart="wind">Wind Speed</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+                <div class="chart-timeframe">
+                    <button class="timeframe-btn active" data-hours="24">24 Hours</button>
+                    <button class="timeframe-btn" data-hours="168">7 Days</button>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -278,6 +314,8 @@
         </div>
     </div>
 
+    <!-- Leaflet JS for interactive maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

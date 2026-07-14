@@ -9,6 +9,15 @@ A beautiful, responsive weather dashboard that displays comprehensive weather da
 - **Hourly Forecast**: 24-hour weather predictions
 - **7-Day Forecast**: Weekly weather outlook with high/low temperatures
 - **Air Quality Index (AQI)**: Real-time air quality data with pollutant breakdown (PM2.5, PM10, O₃, NO₂, SO₂, CO)
+- **Interactive Radar Map**: 
+  - Pinch-to-zoom and pan functionality
+  - Multiple overlay layers: precipitation, temperature, wind, cloud cover
+  - Specialised layers: lightning strikes, snowfall accumulation
+  - Click markers for detailed information
+- **Trend Charts**:
+  - Interactive line and bar charts using Chart.js
+  - View temperature, precipitation, or wind speed trends
+  - Toggle between 24-hour and 7-day timeframes
 - **Geolocation Support**: Get weather for your current location
 - **Search Functionality**: Search for any city worldwide
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
