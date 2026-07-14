@@ -231,36 +231,40 @@ function displayWeather(data, cityName, country, airQualityData) {
 
 function getWeatherIcon(code) {
     // Using Open-Meteo's WMO weather interpretation codes
-    const icons = {
-        0: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/sunny.svg',
-        1: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/partly-cloudy.svg',
-        2: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/partly-cloudy.svg',
-        3: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/cloudy.svg',
-        45: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/fog.svg',
-        48: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/fog.svg',
-        51: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/drizzle.svg',
-        53: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/drizzle.svg',
-        55: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/drizzle.svg',
-        61: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        63: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        65: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        66: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/freezing-rain.svg',
-        67: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/freezing-rain.svg',
-        71: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        73: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        75: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        77: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        80: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        81: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        82: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/rainy.svg',
-        85: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        86: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/snowy.svg',
-        95: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/thunderstorms.svg',
-        96: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/thunderstorms.svg',
-        99: 'https://cdn.jsdelivr.net/gh/stevenle/topographic/master/assets/weather/thunderstorms.svg'
+    // Mapping WMO codes to OpenWeatherMap icon codes
+    const iconMap = {
+        0: '01d',   // Clear sky
+        1: '02d',   // Mainly clear
+        2: '03d',   // Partly cloudy
+        3: '04d',   // Overcast
+        45: '50d',  // Foggy
+        48: '50d',  // Depositing rime fog
+        51: '09d',  // Light drizzle
+        53: '09d',  // Moderate drizzle
+        55: '09d',  // Dense drizzle
+        56: '09d',  // Light freezing drizzle
+        57: '09d',  // Dense freezing drizzle
+        61: '10d',  // Slight rain
+        63: '10d',  // Moderate rain
+        65: '10d',  // Heavy rain
+        66: '10d',  // Light freezing rain
+        67: '10d',  // Heavy freezing rain
+        71: '13d',  // Slight snow fall
+        73: '13d',  // Moderate snow fall
+        75: '13d',  // Heavy snow fall
+        77: '13d',  // Snow grains
+        80: '09d',  // Slight rain showers
+        81: '10d',  // Moderate rain showers
+        82: '10d',  // Violent rain showers
+        85: '13d',  // Slight snow showers
+        86: '13d',  // Heavy snow showers
+        95: '11d',  // Thunderstorm
+        96: '11d',  // Thunderstorm with slight hail
+        99: '11d'   // Thunderstorm with heavy hail
     };
 
-    return icons[code] || icons[0];
+    const iconCode = iconMap[code] || '01d';
+    return `https://openweathermap.org/img/wn/${iconCode}.png`;
 }
 
 function getWeatherDescription(code) {
