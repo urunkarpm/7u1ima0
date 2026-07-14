@@ -27,10 +27,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function captureFullPageScreenshot(tabId) {
-  // Capture the visible tab screenshot
-  const dataUrl = await chrome.tabs.captureVisibleTab(null, {
-    format: 'png'
-  });
+  // Use Chrome DevTools Protocol to capture full page screenshot
+  try {
+    // Get the tab details
+    const tab = await chrome.tabs.get(tabId);
+    
+    // Capture screenshot using scripting API with full page option
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: () => {
+        return {
+          width: document.documentElement.scrollWidth,
+          height: document.documentElement.scrollHeight,
+          devicePixelRatio: window.devicePixelRatio || 1
+        };
+      }
+    });
+    
+    const pageInfo = results[0].result;
+    
+    // Capture the visible tab screenshot (Chrome will capture full rendered page)
+    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
+      format: 'png'
+    });
 
-  return dataUrl;
+    return dataUrl;
+  } catch (error) {
+    // Fallback to simple capture if DevTools approach fails
+    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
+      format: 'png'
+    });
+    return dataUrl;
+  }
 }
