@@ -51,18 +51,18 @@ async function showHeadingAndCaptureScreenshot() {
   // Wait a moment for the indicators to render
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Capture the full page screenshot - simplified approach using captureVisibleTab
+  // Capture the full page screenshot by scrolling and stitching
   try {
-    const response = await chrome.runtime.sendMessage({ action: 'captureScreenshot' });
+    const fullPageDataUrl = await captureFullPageScreenshot();
     
     // Remove indicators after screenshot is captured
     indicators.forEach(indicator => indicator.remove());
     
-    if (response && response.dataUrl) {
+    if (fullPageDataUrl) {
       // Send the dataUrl to background script for download
       const downloadResponse = await chrome.runtime.sendMessage({ 
         action: 'downloadScreenshot', 
-        dataUrl: response.dataUrl
+        dataUrl: fullPageDataUrl
       });
       
       if (downloadResponse && downloadResponse.success) {
@@ -70,8 +70,6 @@ async function showHeadingAndCaptureScreenshot() {
       } else if (downloadResponse && downloadResponse.error) {
         alert('Error downloading screenshot: ' + downloadResponse.error);
       }
-    } else if (response && response.error) {
-      alert('Error capturing screenshot: ' + response.error);
     }
   } catch (error) {
     console.error('Error capturing screenshot:', error);
@@ -79,6 +77,86 @@ async function showHeadingAndCaptureScreenshot() {
     indicators.forEach(indicator => indicator.remove());
     alert('Error capturing screenshot: ' + error.message);
   }
+}
+
+async function captureFullPageScreenshot() {
+  // Get the total scrollable height of the page
+  const totalHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight,
+    document.body.clientHeight,
+    document.documentElement.clientHeight
+  );
+  
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const segments = [];
+  let currentScroll = 0;
+  
+  // Scroll through the page and capture each segment
+  while (currentScroll < totalHeight) {
+    // Scroll to the current position
+    window.scrollTo(0, currentScroll);
+    
+    // Wait for the page to settle and any lazy-loaded content to render
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Capture the current viewport
+    const response = await chrome.runtime.sendMessage({ action: 'captureScreenshot' });
+    
+    if (response && response.error) {
+      throw new Error(response.error);
+    }
+    
+    if (!response || !response.dataUrl) {
+      throw new Error('Failed to capture screenshot segment');
+    }
+    
+    segments.push({
+      scrollY: currentScroll,
+      dataUrl: response.dataUrl
+    });
+    
+    // Move to the next segment
+    currentScroll += viewportHeight;
+  }
+  
+  // Scroll back to top
+  window.scrollTo(0, 0);
+  
+  // Create a canvas to stitch all segments together
+  const canvas = document.createElement('canvas');
+  canvas.width = viewportWidth;
+  canvas.height = totalHeight;
+  const ctx = canvas.getContext('2d');
+  
+  // Load and draw each segment
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = segment.dataUrl;
+    });
+    
+    // Calculate the source and destination coordinates
+    const srcY = Math.min(segment.scrollY % viewportHeight, viewportHeight);
+    const srcHeight = Math.min(viewportHeight - srcY, totalHeight - segment.scrollY);
+    const destY = segment.scrollY;
+    
+    // Draw the relevant portion of the segment
+    ctx.drawImage(
+      img,
+      0, srcY, viewportWidth, srcHeight,
+      0, destY, viewportWidth, srcHeight
+    );
+  }
+  
+  // Convert canvas to data URL
+  return canvas.toDataURL('image/png');
 }
 
 // Listen for extension icon click and execute the main function
