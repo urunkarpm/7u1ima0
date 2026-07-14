@@ -51,19 +51,17 @@ async function showHeadingAndCaptureScreenshot() {
   // Wait a moment for the indicators to render
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Capture the full page screenshot
+  // Capture the full page screenshot - background script handles download via chrome.downloads API
   try {
     const response = await chrome.runtime.sendMessage({ action: 'captureScreenshot' });
     
-    if (response && response.dataUrl) {
-      // Create download link for the screenshot
-      const downloadLink = document.createElement('a');
-      downloadLink.href = response.dataUrl;
-      downloadLink.download = `screenshot-${new Date().getTime()}.png`;
-      downloadLink.click();
-      
-      // Remove indicators after screenshot is captured
-      indicators.forEach(indicator => indicator.remove());
+    // Remove indicators after screenshot is captured
+    indicators.forEach(indicator => indicator.remove());
+    
+    if (response && response.success) {
+      console.log('Screenshot saved successfully');
+    } else if (response && response.error) {
+      alert('Error capturing screenshot: ' + response.error);
     }
   } catch (error) {
     console.error('Error capturing screenshot:', error);
