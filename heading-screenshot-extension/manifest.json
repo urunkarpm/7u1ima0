@@ -16,7 +16,7 @@
     "service_worker": "background.js"
   },
   "web_accessible_resources": [{
-    "resources": ["*.png"],
+    "resources": ["*.png", "html2canvas.min.js"],
     "matches": ["<all_urls>"]
   }]
 }
