@@ -5,7 +5,8 @@
   "description": "Shows heading level on activation and captures a full page screenshot",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "action": {
     "default_title": "Show Heading & Capture Screenshot"
