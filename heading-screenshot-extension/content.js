@@ -1,5 +1,35 @@
 // Content script that runs in the context of web pages
 
+// Inject html2canvas library dynamically
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+document.head.appendChild(script);
+
+/**
+ * Wait for html2canvas to load
+ */
+function waitForHtml2Canvas() {
+  return new Promise((resolve, reject) => {
+    if (typeof html2canvas !== 'undefined') {
+      resolve();
+      return;
+    }
+    
+    const checkInterval = setInterval(() => {
+      if (typeof html2canvas !== 'undefined') {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 100);
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      reject(new Error('html2canvas failed to load'));
+    }, 5000);
+  });
+}
+
 /**
  * Download image helper
  */
@@ -84,6 +114,14 @@ async function captureFullPageScreenshot() {
 }
 
 async function showHeadingAndCaptureScreenshot() {
+  // Wait for html2canvas to load
+  try {
+    await waitForHtml2Canvas();
+  } catch (error) {
+    alert('Failed to load html2canvas library. Please check your internet connection.');
+    return;
+  }
+  
   // Find all headings on the page
   const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
   
