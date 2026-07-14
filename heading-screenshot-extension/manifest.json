@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "tabs"
+    "tabs",
+    "debugger"
   ],
   "action": {
     "default_title": "Show Heading & Capture Screenshot"
