@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌤️ Weather Dashboard</h1>
+            <p class="subtitle">Real-time weather information for any location</p>
+        </header>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="locationInput" placeholder="Enter city name..." />
+                <button id="searchBtn">Search</button>
+                <button id="locationBtn" title="Use my location">📍</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
+        </div>
+
+        <div id="error" class="error-message hidden"></div>
+
+        <div id="weatherData" class="weather-data hidden">
+            <!-- Current Weather -->
+            <section class="current-weather">
+                <h2>Current Weather</h2>
+                <div class="weather-card main">
+                    <div class="location-info">
+                        <h3 id="cityName">--</h3>
+                        <p id="countryCode">--</p>
+                        <p id="localTime">--</p>
+                    </div>
+                    <div class="weather-main">
+                        <img id="weatherIcon" src="" alt="Weather icon" />
+                        <div class="temperature">
+                            <span id="temp">--</span>
+                            <span class="unit">°C</span>
+                        </div>
+                        <p id="weatherDesc">--</p>
+                    </div>
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <span class="icon">🌡️</span>
+                            <div>
+                                <p>Feels Like</p>
+                                <strong id="feelsLike">--°C</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">💧</span>
+                            <div>
+                                <p>Humidity</p>
+                                <strong id="humidity">--%</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">💨</span>
+                            <div>
+                                <p>Wind Speed</p>
+                                <strong id="windSpeed">-- km/h</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">🧭</span>
+                            <div>
+                                <p>Wind Direction</p>
+                                <strong id="windDir">--</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">🌫️</span>
+                            <div>
+                                <p>Visibility</p>
+                                <strong id="visibility">-- km</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">📊</span>
+                            <div>
+                                <p>Pressure</p>
+                                <strong id="pressure">-- hPa</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">☁️</span>
+                            <div>
+                                <p>Cloudiness</p>
+                                <strong id="clouds">--%</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">🌅</span>
+                            <div>
+                                <p>Sunrise</p>
+                                <strong id="sunrise">--:--</strong>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="icon">🌇</span>
+                            <div>
+                                <p>Sunset</p>
+                                <strong id="sunset">--:--</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hourly Forecast -->
+            <section class="forecast-section">
+                <h2>Hourly Forecast (Next 24 Hours)</h2>
+                <div class="forecast-container" id="hourlyForecast">
+                    <!-- Hourly forecast cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Daily Forecast -->
+            <section class="forecast-section">
+                <h2>7-Day Forecast</h2>
+                <div class="daily-forecast" id="dailyForecast">
+                    <!-- Daily forecast cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Air Quality -->
+            <section class="air-quality-section">
+                <h2>Air Quality</h2>
+                <div class="weather-card">
+                    <div class="aqi-display">
+                        <div class="aqi-value" id="aqiValue">--</div>
+                        <div class="aqi-info">
+                            <p id="aqiCategory">--</p>
+                            <p id="aqiDescription">--</p>
+                        </div>
+                    </div>
+                    <div class="pollutants">
+                        <div class="pollutant">
+                            <span>PM2.5</span>
+                            <strong id="pm25">-- μg/m³</strong>
+                        </div>
+                        <div class="pollutant">
+                            <span>PM10</span>
+                            <strong id="pm10">-- μg/m³</strong>
+                        </div>
+                        <div class="pollutant">
+                            <span>O₃</span>
+                            <strong id="o3">-- μg/m³</strong>
+                        </div>
+                        <div class="pollutant">
+                            <span>NO₂</span>
+                            <strong id="no2">-- μg/m³</strong>
+                        </div>
+                        <div class="pollutant">
+                            <span>SO₂</span>
+                            <strong id="so2">-- μg/m³</strong>
+                        </div>
+                        <div class="pollutant">
+                            <span>CO</span>
+                            <strong id="co">-- μg/m³</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
