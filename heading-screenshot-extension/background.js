@@ -54,13 +54,16 @@ function getPageDimensions() {
 
 async function drawImageToCanvas(ctx, dataUrl, x, y, width, height) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, x, y, width, height);
-      resolve();
-    };
-    img.onerror = reject;
-    img.src = dataUrl;
+    // Create an ImageBitmap from the data URL instead of using Image constructor
+    fetch(dataUrl)
+      .then(response => response.blob())
+      .then(blob => createImageBitmap(blob))
+      .then(bitmap => {
+        ctx.drawImage(bitmap, x, y, width, height);
+        bitmap.close();
+        resolve();
+      })
+      .catch(reject);
   });
 }
 
