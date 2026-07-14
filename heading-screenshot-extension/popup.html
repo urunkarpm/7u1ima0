@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Tool</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .checkbox-group {
+      margin-bottom: 10px;
+    }
+    .checkbox-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    #status {
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 12px;
+    }
+    #status.loading {
+      background: #fff3cd;
+      color: #856404;
+    }
+    #status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    #status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <h3>Screenshot Tool</h3>
+  
+  <div class="checkbox-group">
+    <label>
+      <input type="checkbox" id="scrollCheckbox"> Full Page (Scroll)
+    </label>
+    <label>
+      <input type="checkbox" id="delayCheckbox"> Add 1s Delay
+    </label>
+  </div>
+  
+  <button id="captureBtn">Capture Screenshot</button>
+  <button id="downloadBtn" disabled>Download</button>
+  
+  <div id="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
