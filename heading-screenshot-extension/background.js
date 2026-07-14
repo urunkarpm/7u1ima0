@@ -14,15 +14,24 @@ chrome.action.onClicked.addListener(async (tab) => {
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'captureScreenshot') {
-    // Forward to captureVisibleTab which must be called from extension context
-    chrome.tabs.captureVisibleTab(sender.tab.id, { format: 'png' })
-      .then(dataUrl => {
-        sendResponse({ dataUrl: dataUrl });
-      })
-      .catch(error => {
-        console.error('Error capturing screenshot:', error);
-        sendResponse({ error: error.message });
-      });
+    // Get the window ID from the sender's tab and capture that window
+    chrome.tabs.get(sender.tab.id, (tab) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error getting tab:', chrome.runtime.lastError);
+        sendResponse({ error: chrome.runtime.lastError.message });
+        return;
+      }
+      
+      // captureVisibleTab needs windowId, not tabId
+      chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' })
+        .then(dataUrl => {
+          sendResponse({ dataUrl: dataUrl });
+        })
+        .catch(error => {
+          console.error('Error capturing screenshot:', error);
+          sendResponse({ error: error.message });
+        });
+    });
     return true; // Keep the message channel open for async response
   } else if (message.action === 'downloadScreenshot') {
     // Download the screenshot using chrome.downloads API
