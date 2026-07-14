@@ -22,15 +22,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
       
-      // captureVisibleTab needs windowId, not tabId
-      chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' })
-        .then(dataUrl => {
-          sendResponse({ dataUrl: dataUrl });
-        })
-        .catch(error => {
-          console.error('Error capturing screenshot:', error);
-          sendResponse({ error: error.message });
-        });
+      // Use chrome.windows.get to ensure we have a valid window
+      chrome.windows.get(tab.windowId, (window) => {
+        if (chrome.runtime.lastError) {
+          console.error('Error getting window:', chrome.runtime.lastError);
+          sendResponse({ error: 'No window with id: ' + tab.windowId });
+          return;
+        }
+        
+        // captureVisibleTab needs windowId, not tabId
+        chrome.tabs.captureVisibleTab(window.id, { format: 'png' })
+          .then(dataUrl => {
+            sendResponse({ dataUrl: dataUrl });
+          })
+          .catch(error => {
+            console.error('Error capturing screenshot:', error);
+            sendResponse({ error: error.message });
+          });
+      });
     });
     return true; // Keep the message channel open for async response
   } else if (message.action === 'downloadScreenshot') {
