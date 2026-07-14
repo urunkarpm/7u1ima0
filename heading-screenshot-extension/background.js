@@ -42,6 +42,8 @@ async function captureFullPageScreenshot(tabId) {
         return {
           scrollWidth: document.documentElement.scrollWidth,
           scrollHeight: document.documentElement.scrollHeight,
+          innerWidth: window.innerWidth,
+          innerHeight: window.innerHeight,
           devicePixelRatio: window.devicePixelRatio || 1
         };
       }
@@ -57,16 +59,17 @@ async function captureFullPageScreenshot(tabId) {
       mobile: false
     });
     
-    // Capture the screenshot
+    // Capture the screenshot with explicit viewport
     const screenshotData = await chrome.debugger.sendCommand({ tabId }, "Page.captureScreenshot", {
-      format: "png"
+      format: "png",
+      fromSurface: true
     });
     
     // Reset the viewport back to normal
     await chrome.debugger.sendCommand({ tabId }, "Emulation.setDeviceMetricsOverride", {
-      width: 0,
-      height: 0,
-      deviceScaleFactor: 0,
+      width: pageInfo.innerWidth,
+      height: pageInfo.innerHeight,
+      deviceScaleFactor: pageInfo.devicePixelRatio,
       mobile: false
     });
     
