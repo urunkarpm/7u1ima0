@@ -29,16 +29,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function captureFullPageScreenshot(tabId) {
   // Use Chrome DevTools Protocol to capture full page screenshot
   try {
-    // Get the tab details
-    const tab = await chrome.tabs.get(tabId);
+    // Attach debugger to the tab
+    await chrome.debugger.attach({ tabId }, "1.3");
     
-    // Capture screenshot using scripting API with full page option
+    // Enable Page domain
+    await chrome.debugger.sendCommand({ tabId }, "Page.enable");
+    
+    // Get the page viewport and full page dimensions
     const results = await chrome.scripting.executeScript({
       target: { tabId: tabId },
       func: () => {
         return {
-          width: document.documentElement.scrollWidth,
-          height: document.documentElement.scrollHeight,
+          scrollWidth: document.documentElement.scrollWidth,
+          scrollHeight: document.documentElement.scrollHeight,
           devicePixelRatio: window.devicePixelRatio || 1
         };
       }
@@ -46,17 +49,43 @@ async function captureFullPageScreenshot(tabId) {
     
     const pageInfo = results[0].result;
     
-    // Capture the visible tab screenshot (Chrome will capture full rendered page)
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
-      format: 'png'
+    // Set the viewport to capture the full page
+    await chrome.debugger.sendCommand({ tabId }, "Emulation.setDeviceMetricsOverride", {
+      width: pageInfo.scrollWidth,
+      height: pageInfo.scrollHeight,
+      deviceScaleFactor: pageInfo.devicePixelRatio,
+      mobile: false
     });
-
+    
+    // Capture the screenshot
+    const screenshotData = await chrome.debugger.sendCommand({ tabId }, "Page.captureScreenshot", {
+      format: "png"
+    });
+    
+    // Reset the viewport back to normal
+    await chrome.debugger.sendCommand({ tabId }, "Emulation.setDeviceMetricsOverride", {
+      width: 0,
+      height: 0,
+      deviceScaleFactor: 0,
+      mobile: false
+    });
+    
+    // Detach debugger
+    await chrome.debugger.detach({ tabId });
+    
+    // Convert base64 data URL
+    const dataUrl = `data:image/png;base64,${screenshotData.data}`;
+    
     return dataUrl;
   } catch (error) {
-    // Fallback to simple capture if DevTools approach fails
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
-      format: 'png'
-    });
-    return dataUrl;
+    // Try to detach debugger if it's still attached
+    try {
+      await chrome.debugger.detach({ tabId });
+    } catch (e) {
+      // Ignore errors during cleanup
+    }
+    
+    console.error('Error capturing full page screenshot:', error);
+    throw error;
   }
 }
