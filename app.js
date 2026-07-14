@@ -9,6 +9,7 @@ const locationBtn = document.getElementById('locationBtn');
 const loadingEl = document.getElementById('loading');
 const errorEl = document.getElementById('error');
 const weatherDataEl = document.getElementById('weatherData');
+const weatherBackgroundEl = document.getElementById('weatherBackground');
 
 // Event Listeners
 searchBtn.addEventListener('click', handleSearch);
@@ -154,6 +155,9 @@ function displayWeather(data, cityName, country, airQualityData) {
     // Weather icon
     const iconUrl = getWeatherIcon(current.weather_code);
     document.getElementById('weatherIcon').src = iconUrl;
+
+    // Update background based on weather
+    updateWeatherBackground(current.weather_code);
 
     // Hourly forecast (next 24 hours)
     const hourlyContainer = document.getElementById('hourlyForecast');
@@ -394,6 +398,137 @@ function hideLoading() {
 function showError(message) {
     hideLoading();
     errorEl.textContent = message;
-    errorEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
     weatherDataEl.classList.add('hidden');
+}
+
+// Weather Background Functions
+function updateWeatherBackground(weatherCode) {
+    // Clear previous background effects
+    weatherBackgroundEl.innerHTML = '';
+    
+    // Determine weather category and apply appropriate background class
+    const weatherCategory = getWeatherCategory(weatherCode);
+    
+    // Remove all existing weather classes
+    weatherBackgroundEl.classList.remove('clear-sky', 'partly-cloudy', 'overcast', 'rainy', 'thunderstorm', 'snowy', 'foggy');
+    
+    // Add the new weather class
+    weatherBackgroundEl.classList.add(weatherCategory);
+    
+    // Add weather-specific effects
+    switch(weatherCategory) {
+        case 'rainy':
+            createRain();
+            break;
+        case 'thunderstorm':
+            createRain();
+            createLightning();
+            break;
+        case 'snowy':
+            createSnow();
+            break;
+        case 'overcast':
+        case 'partly-cloudy':
+            createClouds();
+            break;
+        case 'foggy':
+            createFog();
+            break;
+        default:
+            // Clear sky - no additional effects needed
+            break;
+    }
+}
+
+function getWeatherCategory(code) {
+    // WMO weather interpretation codes
+    if (code === 0) return 'clear-sky';
+    if (code >= 1 && code <= 2) return 'partly-cloudy';
+    if (code === 3) return 'overcast';
+    if (code >= 45 && code <= 48) return 'foggy';
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rainy';
+    if (code >= 71 && code <= 86) return 'snowy';
+    if (code >= 95 && code <= 99) return 'thunderstorm';
+    return 'clear-sky';
+}
+
+function createRain() {
+    const rainContainer = document.createElement('div');
+    rainContainer.className = 'rain';
+    
+    for (let i = 0; i < 100; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'rain-drop';
+        drop.style.left = Math.random() * 100 + '%';
+        drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+        drop.style.animationDelay = Math.random() * 2 + 's';
+        drop.style.opacity = 0.3 + Math.random() * 0.4;
+        rainContainer.appendChild(drop);
+    }
+    
+    weatherBackgroundEl.appendChild(rainContainer);
+}
+
+function createSnow() {
+    const snowContainer = document.createElement('div');
+    snowContainer.className = 'rain'; // Reuse rain container class
+    
+    for (let i = 0; i < 80; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.style.left = Math.random() * 100 + '%';
+        flake.style.width = (4 + Math.random() * 6) + 'px';
+        flake.style.height = flake.style.width;
+        flake.style.animationDuration = (3 + Math.random() * 5) + 's';
+        flake.style.animationDelay = Math.random() * 5 + 's';
+        flake.style.opacity = 0.6 + Math.random() * 0.4;
+        snowContainer.appendChild(flake);
+    }
+    
+    weatherBackgroundEl.appendChild(snowContainer);
+}
+
+function createLightning() {
+    const lightning = document.createElement('div');
+    lightning.className = 'lightning';
+    weatherBackgroundEl.appendChild(lightning);
+}
+
+function createClouds() {
+    const cloudContainer = document.createElement('div');
+    cloudContainer.className = 'rain'; // Reuse rain container class
+    
+    for (let i = 0; i < 8; i++) {
+        const cloud = document.createElement('div');
+        cloud.className = 'cloud';
+        cloud.style.top = (Math.random() * 30) + '%';
+        cloud.style.width = (100 + Math.random() * 150) + 'px';
+        cloud.style.height = (60 + Math.random() * 60) + 'px';
+        cloud.style.animationDuration = (20 + Math.random() * 20) + 's';
+        cloud.style.animationDelay = Math.random() * 10 + 's';
+        cloud.style.opacity = 0.4 + Math.random() * 0.4;
+        cloudContainer.appendChild(cloud);
+    }
+    
+    weatherBackgroundEl.appendChild(cloudContainer);
+}
+
+function createFog() {
+    const fogContainer = document.createElement('div');
+    fogContainer.className = 'rain'; // Reuse rain container class
+    
+    for (let i = 0; i < 6; i++) {
+        const fog = document.createElement('div');
+        fog.className = 'cloud';
+        fog.style.top = (20 + Math.random() * 60) + '%';
+        fog.style.width = (150 + Math.random() * 200) + 'px';
+        fog.style.height = (80 + Math.random * 80) + 'px';
+        fog.style.animationDuration = (30 + Math.random() * 30) + 's';
+        fog.style.animationDelay = Math.random() * 15 + 's';
+        fog.style.opacity = 0.2 + Math.random() * 0.3;
+        fogContainer.appendChild(fog);
+    }
+    
+    weatherBackgroundEl.appendChild(fogContainer);
 }
