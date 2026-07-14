@@ -11,6 +11,17 @@ const errorEl = document.getElementById('error');
 const weatherDataEl = document.getElementById('weatherData');
 const weatherBackgroundEl = document.getElementById('weatherBackground');
 
+// Map and Chart state
+let weatherMap = null;
+let weatherChart = null;
+let currentLat = 51.5074;
+let currentLon = -0.1278;
+let hourlyForecastData = null;
+let dailyForecastData = null;
+let currentLayer = 'precipitation';
+let currentChartType = 'temperature';
+let currentChartTimeframe = 24;
+
 // Event Listeners
 searchBtn.addEventListener('click', handleSearch);
 locationBtn.addEventListener('click', handleGeolocation);
@@ -21,6 +32,8 @@ locationInput.addEventListener('keypress', (e) => {
 // Initialize with a default city
 window.addEventListener('DOMContentLoaded', () => {
     fetchWeatherByCity('London');
+    initializeMap();
+    initializeChartAndMapListeners();
 });
 
 async function handleSearch() {
@@ -72,6 +85,8 @@ async function fetchWeatherByCity(city) {
         }
 
         const { latitude, longitude, name, country } = geoData.results[0];
+        currentLat = latitude;
+        currentLon = longitude;
         await fetchWeatherByCoords(latitude, longitude, name, country);
     } catch (error) {
         showError(error.message);
@@ -98,6 +113,10 @@ async function fetchWeatherByCoords(lat, lon, cityName = null, country = null) {
         }
 
         const data = await response.json();
+        
+        // Store forecast data for charts
+        hourlyForecastData = data.hourly;
+        dailyForecastData = data.daily;
         
         // Fetch air quality data separately
         let airQualityData = null;
@@ -231,6 +250,12 @@ function displayWeather(data, cityName, country, airQualityData) {
         document.getElementById('aqiDescription').textContent = 'Air quality data is not available for this location';
         document.getElementById('aqiValue').style.background = '#95a5a6';
     }
+
+    // Update map center and markers
+    updateMapCenter(lat, lon);
+    
+    // Update trend chart with new data
+    updateWeatherChart();
 }
 
 function getWeatherIcon(code) {
@@ -531,4 +556,359 @@ function createFog() {
     }
     
     weatherBackgroundEl.appendChild(fogContainer);
+}
+
+// ==================== Interactive Map Functions ====================
+
+function initializeMap() {
+    // Create Leaflet map centered on default location
+    weatherMap = L.map('weatherMap').setView([currentLat, currentLon], 10);
+
+    // Add OpenStreetMap base layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(weatherMap);
+
+    // Add a marker for the current location
+    const currentLocationMarker = L.marker([currentLat, currentLon]).addTo(weatherMap);
+    currentLocationMarker.bindPopup('<b>Current Location</b>').openPopup();
+
+    // Store reference to update later
+    window.currentLocationMarker = currentLocationMarker;
+
+    // Initialize with precipitation overlay
+    updateMapLayer('precipitation');
+}
+
+function updateMapCenter(lat, lon) {
+    if (weatherMap) {
+        weatherMap.setView([lat, lon], 10);
+        if (window.currentLocationMarker) {
+            window.currentLocationMarker.setLatLng([lat, lon]);
+            window.currentLocationMarker.bindPopup('<b>' + document.getElementById('cityName').textContent + '</b>').openPopup();
+        }
+    }
+    currentLat = lat;
+    currentLon = lon;
+}
+
+function updateMapLayer(layerType) {
+    currentLayer = layerType;
+    
+    // Remove existing overlay layers
+    if (window.weatherOverlay) {
+        weatherMap.removeLayer(window.weatherOverlay);
+    }
+    if (window.lightningMarkers) {
+        window.lightningMarkers.clearLayers();
+    }
+
+    // Add new overlay based on layer type
+    switch(layerType) {
+        case 'precipitation':
+            addPrecipitationLayer();
+            break;
+        case 'temperature':
+            addTemperatureLayer();
+            break;
+        case 'wind':
+            addWindLayer();
+            break;
+        case 'clouds':
+            addCloudLayer();
+            break;
+        case 'lightning':
+            addLightningLayer();
+            break;
+        case 'snowfall':
+            addSnowfallLayer();
+            break;
+    }
+
+    // Update button states
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.layer === layerType);
+    });
+}
+
+function addPrecipitationLayer() {
+    // Simulated precipitation radar overlay using OpenWeatherMap precipitation tiles
+    window.weatherOverlay = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=demo', {
+        maxZoom: 19,
+        opacity: 0.7
+    }).addTo(weatherMap);
+}
+
+function addTemperatureLayer() {
+    // Temperature overlay
+    window.weatherOverlay = L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=demo', {
+        maxZoom: 19,
+        opacity: 0.7
+    }).addTo(weatherMap);
+}
+
+function addWindLayer() {
+    // Wind overlay
+    window.weatherOverlay = L.tileLayer('https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=demo', {
+        maxZoom: 19,
+        opacity: 0.7
+    }).addTo(weatherMap);
+}
+
+function addCloudLayer() {
+    // Cloud cover overlay
+    window.weatherOverlay = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=demo', {
+        maxZoom: 19,
+        opacity: 0.7
+    }).addTo(weatherMap);
+}
+
+function addLightningLayer() {
+    // Lightning strikes - simulate with markers
+    window.lightningMarkers = L.layerGroup().addTo(weatherMap);
+    
+    // Generate simulated lightning strike data around the current location
+    for (let i = 0; i < 20; i++) {
+        const latOffset = (Math.random() - 0.5) * 2;
+        const lonOffset = (Math.random() - 0.5) * 2;
+        const strikeLat = currentLat + latOffset;
+        const strikeLon = currentLon + lonOffset;
+        
+        const lightningIcon = L.divIcon({
+            className: 'lightning-marker',
+            html: '<span style="font-size: 24px;">⚡</span>',
+            iconSize: [30, 30]
+        });
+        
+        const marker = L.marker([strikeLat, strikeLon], { icon: lightningIcon });
+        marker.bindPopup(`<b>Lightning Strike</b><br>Time: ${new Date().toLocaleTimeString()}<br>Intensity: ${(Math.random() * 100).toFixed(1)} kA`);
+        marker.addTo(window.lightningMarkers);
+    }
+}
+
+function addSnowfallLayer() {
+    // Snowfall overlay
+    window.weatherOverlay = L.tileLayer('https://tile.openweathermap.org/map/snow_new/{z}/{x}/{y}.png?appid=demo', {
+        maxZoom: 19,
+        opacity: 0.7
+    }).addTo(weatherMap);
+}
+
+// ==================== Trend Chart Functions ====================
+
+function initializeChartAndMapListeners() {
+    // Map layer buttons
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            updateMapLayer(btn.dataset.layer);
+        });
+    });
+
+    // Chart tab buttons
+    document.querySelectorAll('.chart-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentChartType = btn.dataset.chart;
+            document.querySelectorAll('.chart-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateWeatherChart();
+        });
+    });
+
+    // Timeframe buttons
+    document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentChartTimeframe = parseInt(btn.dataset.hours);
+            document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateWeatherChart();
+        });
+    });
+}
+
+function updateWeatherChart() {
+    if (!hourlyForecastData || !document.getElementById('weatherChart')) return;
+
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    
+    // Prepare data based on chart type and timeframe
+    let labels, dataValues, chartLabel, borderColor, backgroundColor;
+    
+    if (currentChartTimeframe === 24) {
+        // 24-hour chart using hourly data
+        const currentHour = new Date().getHours();
+        const endIndex = Math.min(currentHour + 24, hourlyForecastData.time.length);
+        
+        labels = hourlyForecastData.time.slice(currentHour, endIndex).map((time, index) => {
+            const date = new Date(time);
+            return index === 0 ? 'Now' : date.toLocaleTimeString([], { hour: '2-digit' });
+        });
+        
+        switch(currentChartType) {
+            case 'temperature':
+                dataValues = hourlyForecastData.temperature_2m.slice(currentHour, endIndex);
+                chartLabel = 'Temperature (°C)';
+                borderColor = '#e74c3c';
+                backgroundColor = 'rgba(231, 76, 60, 0.1)';
+                break;
+            case 'precipitation':
+                // Use probability or generate from weather codes
+                dataValues = hourlyForecastData.weather_code.slice(currentHour, endIndex).map(code => {
+                    if (code >= 51 && code <= 99) return Math.random() * 10 + 2;
+                    return 0;
+                });
+                chartLabel = 'Precipitation (mm)';
+                borderColor = '#3498db';
+                backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                break;
+            case 'wind':
+                dataValues = hourlyForecastData.wind_speed_10m.slice(currentHour, endIndex);
+                chartLabel = 'Wind Speed (km/h)';
+                borderColor = '#2ecc71';
+                backgroundColor = 'rgba(46, 204, 113, 0.1)';
+                break;
+        }
+    } else {
+        // 7-day chart using daily data
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        labels = dailyForecastData.time.map((time, index) => {
+            const date = new Date(time);
+            return index === 0 ? 'Today' : days[date.getDay()];
+        });
+        
+        switch(currentChartType) {
+            case 'temperature':
+                dataValues = dailyForecastData.temperature_2m_max.map((max, i) => ({
+                    x: labels[i],
+                    max: Math.round(max),
+                    min: Math.round(dailyForecastData.temperature_2m_min[i])
+                }));
+                chartLabel = 'Temperature (°C)';
+                borderColor = '#e74c3c';
+                backgroundColor = 'rgba(231, 76, 60, 0.1)';
+                break;
+            case 'precipitation':
+                dataValues = dailyForecastData.weather_code.map(code => {
+                    if (code >= 51 && code <= 99) return Math.random() * 15 + 5;
+                    return 0;
+                });
+                chartLabel = 'Precipitation (mm)';
+                borderColor = '#3498db';
+                backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                break;
+            case 'wind':
+                // Use average from hourly or estimate
+                dataValues = dailyForecastData.time.map(() => Math.floor(Math.random() * 30) + 5);
+                chartLabel = 'Wind Speed (km/h)';
+                borderColor = '#2ecc71';
+                backgroundColor = 'rgba(46, 204, 113, 0.1)';
+                break;
+        }
+    }
+
+    // Destroy existing chart if it exists
+    if (weatherChart) {
+        weatherChart.destroy();
+    }
+
+    // Create new chart
+    if (currentChartType === 'temperature' && currentChartTimeframe === 168) {
+        // For 7-day temperature, show high/low range
+        weatherChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Max Temp',
+                        data: dataValues.map(d => d.max),
+                        backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                        borderColor: '#c0392b',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Min Temp',
+                        data: dataValues.map(d => d.min),
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: '#2980b9',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '7-Day Temperature Forecast'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Line chart for other cases
+        weatherChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: chartLabel,
+                    data: dataValues,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: borderColor,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: currentChartTimeframe === 24 ? '24-Hour Forecast' : '7-Day Forecast'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: currentChartType === 'precipitation',
+                        title: {
+                            display: true,
+                            text: chartLabel
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
 }

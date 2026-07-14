@@ -1089,4 +1089,131 @@ h2 {
     .cards-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Interactive Radar Map Styles */
+    .radar-map-section {
+        margin-top: 30px;
+    }
+
+    .map-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .map-layer-btn {
+        padding: 8px 16px;
+        border: 2px solid var(--accent-color);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .map-layer-btn:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .map-layer-btn.active {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .weather-map {
+        width: 100%;
+        height: 500px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px var(--shadow-color);
+    }
+
+    .map-hint {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 10px;
+        font-style: italic;
+    }
+
+    /* Trend Charts Styles */
+    .trend-charts-section {
+        margin-top: 30px;
+    }
+
+    .chart-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        justify-content: center;
+    }
+
+    .chart-tab-btn {
+        padding: 10px 20px;
+        border: 2px solid var(--accent-color);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .chart-tab-btn:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .chart-tab-btn.active {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 350px;
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px var(--shadow-color);
+    }
+
+    .chart-timeframe {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: center;
+    }
+
+    .timeframe-btn {
+        padding: 8px 20px;
+        border: 2px solid var(--accent-color);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .timeframe-btn:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .timeframe-btn.active {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    /* Leaflet map dark mode adjustments */
+    body.dark-mode .leaflet-layer,
+    body.dark-mode .leaflet-control-zoom-in,
+    body.dark-mode .leaflet-control-zoom-out {
+        filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
 }
