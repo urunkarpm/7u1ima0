@@ -1,5 +1,88 @@
 // Content script that runs in the context of web pages
 
+/**
+ * Download image helper
+ */
+function downloadImage(imageData, filename) {
+  const link = document.createElement('a');
+  link.href = imageData;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/**
+ * Full Page Screenshot Capture Logic
+ * Scrolls through entire page and stitches screenshots together
+ */
+async function captureFullPageScreenshot() {
+  try {
+    // Get page dimensions
+    const pageHeight = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+    
+    const pageWidth = document.documentElement.scrollWidth || document.body.scrollWidth;
+    const currentScroll = window.scrollY;
+    
+    console.log(`Page dimensions: ${pageWidth}x${pageHeight}`);
+    
+    // Get visible viewport height
+    const viewportHeight = window.innerHeight;
+    
+    // Create final canvas for stitching
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = pageWidth;
+    finalCanvas.height = pageHeight;
+    const ctx = finalCanvas.getContext('2d');
+    
+    // Capture screenshots
+    let scrollPosition = 0;
+    let captureIndex = 0;
+    
+    while (scrollPosition < pageHeight) {
+      // Scroll to position
+      window.scrollTo(0, scrollPosition);
+      
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Capture visible area using html2canvas (or your preferred method)
+      const screenshot = await html2canvas(document.body, {
+        useCORS: true,
+        allowTaint: true,
+        scrollY: -scrollPosition,
+        scrollX: 0,
+        windowHeight: pageHeight
+      });
+      
+      // Draw on final canvas
+      ctx.drawImage(screenshot, 0, scrollPosition);
+      
+      console.log(`Captured section ${++captureIndex} at scroll ${scrollPosition}px`);
+      
+      scrollPosition += viewportHeight;
+    }
+    
+    // Restore original scroll position
+    window.scrollTo(0, currentScroll);
+    
+    // Convert to downloadable image
+    const image = finalCanvas.toDataURL('image/png');
+    downloadImage(image, `screenshot-${Date.now()}.png`);
+    
+    return image;
+    
+  } catch (error) {
+    console.error('Screenshot capture failed:', error);
+    throw error;
+  }
+}
+
 async function showHeadingAndCaptureScreenshot() {
   // Find all headings on the page
   const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -51,112 +134,18 @@ async function showHeadingAndCaptureScreenshot() {
   // Wait a moment for the indicators to render
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Capture the full page screenshot by scrolling and stitching
+  // Capture the full page screenshot using html2canvas
   try {
-    const fullPageDataUrl = await captureFullPageScreenshot();
+    await captureFullPageScreenshot();
     
     // Remove indicators after screenshot is captured
     indicators.forEach(indicator => indicator.remove());
-    
-    if (fullPageDataUrl) {
-      // Send the dataUrl to background script for download
-      const downloadResponse = await chrome.runtime.sendMessage({ 
-        action: 'downloadScreenshot', 
-        dataUrl: fullPageDataUrl
-      });
-      
-      if (downloadResponse && downloadResponse.success) {
-        console.log('Screenshot saved successfully');
-      } else if (downloadResponse && downloadResponse.error) {
-        alert('Error downloading screenshot: ' + downloadResponse.error);
-      }
-    }
   } catch (error) {
     console.error('Error capturing screenshot:', error);
     // Remove indicators on error
     indicators.forEach(indicator => indicator.remove());
     alert('Error capturing screenshot: ' + error.message);
   }
-}
-
-async function captureFullPageScreenshot() {
-  // Get the total scrollable height of the page
-  const totalHeight = Math.max(
-    document.body.scrollHeight,
-    document.documentElement.scrollHeight,
-    document.body.offsetHeight,
-    document.documentElement.offsetHeight,
-    document.body.clientHeight,
-    document.documentElement.clientHeight
-  );
-  
-  const viewportHeight = window.innerHeight;
-  const viewportWidth = window.innerWidth;
-  const segments = [];
-  let currentScroll = 0;
-  
-  // Scroll through the page and capture each segment
-  while (currentScroll < totalHeight) {
-    // Scroll to the current position
-    window.scrollTo(0, currentScroll);
-    
-    // Wait for the page to settle and any lazy-loaded content to render
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Capture the current viewport
-    const response = await chrome.runtime.sendMessage({ action: 'captureScreenshot' });
-    
-    if (response && response.error) {
-      throw new Error(response.error);
-    }
-    
-    if (!response || !response.dataUrl) {
-      throw new Error('Failed to capture screenshot segment');
-    }
-    
-    segments.push({
-      scrollY: currentScroll,
-      dataUrl: response.dataUrl
-    });
-    
-    // Move to the next segment
-    currentScroll += viewportHeight;
-  }
-  
-  // Scroll back to top
-  window.scrollTo(0, 0);
-  
-  // Create a canvas to stitch all segments together
-  const canvas = document.createElement('canvas');
-  canvas.width = viewportWidth;
-  canvas.height = totalHeight;
-  const ctx = canvas.getContext('2d');
-  
-  // Load and draw each segment
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
-    const img = await new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = segment.dataUrl;
-    });
-    
-    // Calculate the source and destination coordinates
-    const srcY = Math.min(segment.scrollY % viewportHeight, viewportHeight);
-    const srcHeight = Math.min(viewportHeight - srcY, totalHeight - segment.scrollY);
-    const destY = segment.scrollY;
-    
-    // Draw the relevant portion of the segment
-    ctx.drawImage(
-      img,
-      0, srcY, viewportWidth, srcHeight,
-      0, destY, viewportWidth, srcHeight
-    );
-  }
-  
-  // Convert canvas to data URL
-  return canvas.toDataURL('image/png');
 }
 
 // Listen for extension icon click and execute the main function

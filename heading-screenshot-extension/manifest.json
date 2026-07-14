@@ -6,8 +6,7 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "downloads",
-    "windows"
+    "downloads"
   ],
   "action": {
     "default_title": "Show Heading & Capture Screenshot",
@@ -15,5 +14,9 @@
   },
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "web_accessible_resources": [{
+    "resources": ["*.png"],
+    "matches": ["<all_urls>"]
+  }]
 }
