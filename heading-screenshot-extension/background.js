@@ -54,43 +54,18 @@ function getPageDimensions() {
 
 async function drawImageToCanvas(ctx, dataUrl, x, y, width, height) {
   return new Promise((resolve, reject) => {
-    // Use ImageBitmap if available (Chrome service workers support this)
-    if (typeof createImageBitmap !== 'undefined') {
-      // Fetch the image data and create an ImageBitmap (works in service workers)
-      fetch(dataUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          if (!blob || blob.size === 0) {
-            throw new Error('Received empty blob');
-          }
-          return createImageBitmap(blob);
-        })
-        .then(img => {
-          ctx.drawImage(img, x, y, width, height);
-          resolve();
-        })
-        .catch(error => {
-          console.error('Error in createImageBitmap path:', error);
-          reject(new Error('Failed to load image: ' + error.message));
-        });
-    } else {
-      // Fallback for environments where createImageBitmap is not available
-      const img = new Image();
-      img.onload = () => {
+    // Convert data URL to blob
+    fetch(dataUrl)
+      .then(response => response.blob())
+      .then(blob => createImageBitmap(blob))
+      .then(img => {
         ctx.drawImage(img, x, y, width, height);
         resolve();
-      };
-      img.onerror = (e) => {
-        console.error('Image onload error:', e);
-        reject(new Error('Failed to load image'));
-      };
-      img.src = dataUrl;
-    }
+      })
+      .catch(error => {
+        console.error('Error loading image:', error);
+        reject(new Error('Failed to load image: ' + error.message));
+      });
   });
 }
 
