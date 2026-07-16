@@ -1,0 +1,38 @@
+```
+# Flutter/Dart specific
+.dart_tool/
+.packages
+.pub-cache/
+pubspec.lock
+
+# Android
+android/.gradle
+android/local.properties
+*.iml
+*.ipr
+*.iws
+captures/
+.externalToolBuilders/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Build artifacts
+build/
+dist/
+
+# Dependencies
+node_modules/
+```
