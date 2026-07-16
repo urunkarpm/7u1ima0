@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: DnsFlowViewModel = viewModel(),
     onRequestPermission: () -> Unit,
-    onShowBottomSheet: () -> Unit
+    onShowBottomSheet: (DnsProfile?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -82,7 +82,7 @@ fun HomeScreen(
                     ExpressiveToggle(
                         checked = uiState.isAutoSwitchEnabled,
                         onCheckedChange = { viewModel.toggleAutoSwitch(it) },
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 12.dp)
                     )
                 }
             )
@@ -97,8 +97,8 @@ fun HomeScreen(
                 LazyColumn(
                     state = rememberLazyListState(),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     // Network Status Card
                     item {
@@ -136,7 +136,7 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = 24.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -148,7 +148,7 @@ fun HomeScreen(
                             )
                             
                             FilledTonalIconButton(
-                                onClick = onShowBottomSheet,
+                                onClick = { onShowBottomSheet(null) },
                                 modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = "Add Profile")
@@ -169,7 +169,9 @@ fun HomeScreen(
                     // Empty state
                     if (uiState.profiles.isEmpty()) {
                         item {
-                            EmptyState()
+                            EmptyState(
+                                onAddProfile = { onShowBottomSheet(null) }
+                            )
                         }
                     }
                 }
@@ -177,10 +179,10 @@ fun HomeScreen(
             
             // Quick Override FAB
             FloatingActionButton(
-                onClick = onShowBottomSheet,
+                onClick = { onShowBottomSheet(null) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp),
+                    .padding(24.dp),
                 shape = RoundedCornerShape(28.dp),
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -204,15 +206,15 @@ private fun PermissionNoticeCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (!hasLocationPermission) {
                 Row(
@@ -222,7 +224,8 @@ private fun PermissionNoticeCard(
                     Icon(
                         Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(24.dp)
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -236,7 +239,7 @@ private fun PermissionNoticeCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    TextButton(onClick = onRequestPermission) {
+                    FilledTonalButton(onClick = onRequestPermission) {
                         Text("Grant")
                     }
                 }
@@ -250,7 +253,8 @@ private fun PermissionNoticeCard(
                     Icon(
                         Icons.Default.BatteryStd,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -264,7 +268,7 @@ private fun PermissionNoticeCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    TextButton(onClick = onDismissBattery) {
+                    FilledTonalButton(onClick = onDismissBattery) {
                         Text("Disable")
                     }
                 }
@@ -284,12 +288,12 @@ private fun MobileDataDnsSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(28.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 "Mobile Data DNS",
@@ -298,7 +302,7 @@ private fun MobileDataDnsSection(
             )
             
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 DnsProviderChip(
@@ -339,9 +343,9 @@ private fun ProfileListItem(
     SwipeToDismiss(
         dismissDirection = androidx.compose.foundation.gestures.Orientation.Horizontal,
         onDismissed = onDelete,
-                modifier = Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         background = {
             Box(
                 modifier = Modifier
@@ -373,19 +377,19 @@ private fun ProfileListItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
                                 Icons.Default.Wifi,
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(24.dp),
                                 tint = if (isActiveNetwork) {
                                     MaterialTheme.colorScheme.tertiary
                                 } else {
@@ -398,6 +402,7 @@ private fun ProfileListItem(
                                 fontWeight = if (isActiveNetwork) FontWeight.Bold else FontWeight.Normal
                             )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = profile.dnsHostname,
                             style = MaterialTheme.typography.bodyMedium,
@@ -417,9 +422,10 @@ private fun ProfileListItem(
                                 )
                             }
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                     
-                    IconButton(onClick = onEdit) {
+                    FilledTonalIconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                 }
@@ -450,26 +456,27 @@ private fun SwipeToDismiss(
  * Empty State for no profiles
  */
 @Composable
-private fun EmptyState() {
+private fun EmptyState(onAddProfile: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
                 Icons.Default.WifiOff,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.outline
             )
             Text(
                 "No profiles yet",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
@@ -477,6 +484,19 @@ private fun EmptyState() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onAddProfile,
+                shape = RoundedCornerShape(28.dp),
+                modifier = Modifier.height(56.dp)
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Add Your First Profile")
+            }
         }
     }
 }

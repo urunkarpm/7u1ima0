@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.dnsflow.app.data.model.DnsProfile
 import com.dnsflow.app.ui.screens.HomeScreen
 import com.dnsflow.app.ui.theme.DnsFlowTheme
 
@@ -36,8 +37,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     HomeScreen(
                         onRequestPermission = { requestLocationPermission() },
-                        onShowBottomSheet = { profileId ->
-                            editingProfileId = profileId
+                        onShowBottomSheet = { profile: DnsProfile? ->
+                            editingProfileId = profile?.id
                             // In full implementation, this would open bottom sheet
                         }
                     )
