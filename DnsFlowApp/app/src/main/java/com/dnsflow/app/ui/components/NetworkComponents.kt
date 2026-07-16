@@ -122,8 +122,8 @@ private fun DnsStatusIndicator(status: DnsStatus) {
     
     val statusColor by animateColorAsState(
         targetValue = when (status) {
-            DnsStatus.Active -> MaterialTheme.colorScheme.primary
-            DnsStatus.Switching -> MaterialTheme.colorScheme.tertiary
+            DnsStatus.Active -> MaterialTheme.colorScheme.success
+            DnsStatus.Switching -> MaterialTheme.colorScheme.warning
             DnsStatus.Failed -> MaterialTheme.colorScheme.error
             else -> MaterialTheme.colorScheme.outline
         },
